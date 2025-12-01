@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Story Point Estimator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f7;
+      color: #111827;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f5f5f7;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+
+    h2 {
+      font-size: 1.3rem;
+      margin-top: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 0.75rem;
+      padding: 1rem 1.25rem;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+      margin-bottom: 1rem;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .row > * {
+      flex: 1 1 200px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: #4b5563;
+    }
+
+    input[type="text"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      border: 1px solid #d1d5db;
+      font-size: 0.9rem;
+      box-sizing: border-box;
+      background: #f9fafb;
+    }
+
+    textarea {
+      min-height: 60px;
+      resize: vertical;
+    }
+
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 0.45rem 0.9rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      background: #2563eb;
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: background 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+      white-space: nowrap;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+    }
+
+    button.secondary {
+      background: #e5e7eb;
+      color: #111827;
+      box-shadow: none;
+    }
+
+    button.secondary:hover {
+      background: #d1d5db;
+      box-shadow: none;
+    }
+
+    button.danger {
+      background: #ef4444;
+      box-shadow: 0 6px 16px rgba(239, 68, 68, 0.25);
+    }
+
+    button.danger:hover {
+      background: #dc2626;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.7rem;
+      border-radius: 999px;
+      background: #e5f0ff;
+      color: #1e3a8a;
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin: 0.15rem;
+    }
+
+    .chip span {
+      margin-left: 0.35rem;
+      cursor: pointer;
+      font-size: 0.85em;
+      opacity: 0.7;
+    }
+
+    .chip span:hover {
+      opacity: 1;
+    }
+
+    .muted {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+
+    th,
+    td {
+      padding: 0.55rem 0.5rem;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+    }
+
+    th {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      color: #6b7280;
+      letter-spacing: 0.02em;
+    }
+
+    tr:hover td {
+      background: #f9fafb;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      background: #ecfdf3;
+      color: #166534;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge.neutral {
+      background: #f3f4f6;
+      color: #4b5563;
+    }
+
+    /* More visible point buttons */
+    .point-button {
+      padding: 0.45rem 0.75rem;
+      border-radius: 0.5rem;
+      border: 1px solid #9ca3af;
+      background: #f3f4f6;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.1s ease, border-color 0.1s ease, transform 0.05s ease;
+      margin: 0.15rem;
+      min-width: 2.6rem;
+      text-align: center;
+      color: #111827;
+      font-weight: 500;
+    }
+
+    .point-button:hover {
+      background: #e5e7eb;
+      border-color: #6b7280;
+    }
+
+    .point-button.selected {
+      background: #2563eb !important;
+      border-color: #1d4ed8 !important;
+      color: white !important;
+      transform: translateY(-1px);
+    }
+
+    .member-card {
+      background: #f9fafb;
+      border-radius: 0.75rem;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      border: 1px solid #e5e7eb;
+    }
+
+    .member-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.35rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .member-header span.vote-status {
+      font-weight: 500;
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+
+    .member-header span.vote-status.ready {
+      color: #16a34a;
+    }
+
+    .flex-between {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .estimation-panel {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.35);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 50;
+    }
+
+    .estimation-inner {
+      max-width: 900px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: #ffffff;
+      border-radius: 1rem;
+      padding: 1.25rem 1.5rem 1rem;
+      box-shadow: 0 25px 70px rgba(15, 23, 42, 0.35);
+    }
+
+    .est-header {
+      margin-bottom: 0.75rem;
+    }
+
+    .est-header h2 {
+      margin: 0;
+    }
+
+    .est-story-desc {
+      margin-top: 0.25rem;
+      font-size: 0.85rem;
+      color: #4b5563;
+      white-space: pre-wrap;
+    }
+
+    .summary-line {
+      font-size: 0.85rem;
+      color: #374151;
+      margin-top: 0.25rem;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin-top: 0.35rem;
+    }
+
+    .pill-label {
+      font-size: 0.8rem;
+      color: #6b7280;
+      font-weight: 500;
+    }
+
+    .final-select {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .final-select select {
+      max-width: 120px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 600px) {
+      .row {
+        flex-direction: column;
+      }
+      .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top-bar">
+      <div>
+        <h1>Story Point Estimator</h1>
+        <div class="muted">Planning poker tool for your Scrum team</div>
+      </div>
+      <button class="secondary" id="resetBoardBtn" type="button">Reset board</button>
+    </div>
+
+    <!-- Session participants (also the voters) -->
+    <div class="card">
+      <h2>1. Session participants (voters)</h2>
+      <div class="row" style="align-items:flex-end;">
+        <div>
+          <label for="sessionNameInput">Your name</label>
+          <input
+            id="sessionNameInput"
+            type="text"
+            placeholder="Add your name to join this pointing session"
+          />
+          <div class="muted">
+            Everyone listed here will have a voting card in each story estimation.
+          </div>
+        </div>
+        <div style="flex:0 0 auto;">
+          <button id="joinSessionBtn" type="button">Join session</button>
+        </div>
+      </div>
+      <div id="sessionParticipantsChips" style="margin-top:0.5rem;" class="muted">
+        No one has joined yet.
+      </div>
+    </div>
+
+    <!-- Story list / creation -->
+    <div class="card">
+      <h2>2. Stories to estimate</h2>
+      <div class="row" style="align-items:flex-start; margin-bottom:0.75rem;">
+        <div>
+          <label for="storyTitleInput">Story title</label>
+          <input
+            id="storyTitleInput"
+            type="text"
+            placeholder="As a user, I want to..."
+          />
+        </div>
+        <div>
+          <label for="storyDescInput">Description (optional)</label>
+          <textarea
+            id="storyDescInput"
+            placeholder="Acceptance criteria, notes, links, etc."
+          ></textarea>
+        </div>
+        <div style="flex:0 0 auto;">
+          <button id="addStoryBtn" type="button">Add story</button>
+        </div>
+      </div>
+
+      <div id="storiesSection">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40%;">Story</th>
+              <th style="width:20%;">Final estimate</th>
+              <th style="width:20%;">Status</th>
+              <th style="width:20%;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="storiesTableBody">
+            <!-- Rows injected here -->
+          </tbody>
+        </table>
+        <div id="noStoriesMsg" class="muted" style="margin-top:0.5rem;">
+          No stories yet. Add one above to get started.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estimation panel (modal) -->
+  <div id="estimationPanel" class="estimation-panel">
+    <div class="estimation-inner">
+      <div class="flex-between est-header">
+        <div>
+          <h2 id="estStoryTitle">Estimate story</h2>
+          <div class="est-story-desc" id="estStoryDesc"></div>
+        </div>
+        <div>
+          <button class="secondary" id="closeEstimationBtn" type="button">Close</button>
+        </div>
+      </div>
+
+      <div class="muted" style="margin-bottom:0.5rem;">
+        Each participant chooses a card. Click <strong>Reveal votes</strong> when everyone is ready.
+      </div>
+
+      <div class="flex-between" style="margin-bottom:0.75rem;">
+        <div class="pill-row">
+          <span class="pill-label">Quick deck:</span>
+          <div id="pointDeckPreview"></div>
+        </div>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+          <button class="secondary" id="hideVotesBtn" type="button">Hide votes</button>
+          <button id="revealVotesBtn" type="button">Reveal votes</button>
+        </div>
+      </div>
+
+      <div id="summaryArea" style="margin-bottom:0.75rem;"></div>
+
+      <div id="memberVotesContainer"></div>
+
+      <div class="final-select">
+        <label for="finalEstimateSelect">Final estimate:</label>
+        <select id="finalEstimateSelect">
+          <option value="">— choose —</option>
+        </select>
+        <button id="saveFinalEstimateBtn" type="button">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const allowedPoints = [0, 0.5, 1, 2, 3, 5, 8, 13, 20, 40, 100, "?"];
+
+      let stories = [];
+      let nextStoryId = 1;
+      let currentStoryId = null;
+      let sessionParticipants = [];
+
+      const storyTitleInput = document.getElementById("storyTitleInput");
+      const storyDescInput = document.getElementById("storyDescInput");
+      const addStoryBtn = document.getElementById("addStoryBtn");
+      const storiesTableBody = document.getElementById("storiesTableBody");
+      const noStoriesMsg = document.getElementById("noStoriesMsg");
+
+      const estimationPanel = document.getElementById("estimationPanel");
+      const closeEstimationBtn = document.getElementById("closeEstimationBtn");
+      const estStoryTitle = document.getElementById("estStoryTitle");
+      const estStoryDesc = document.getElementById("estStoryDesc");
+      const memberVotesContainer = document.getElementById("memberVotesContainer");
+      const revealVotesBtn = document.getElementById("revealVotesBtn");
+      const hideVotesBtn = document.getElementById("hideVotesBtn");
+      const summaryArea = document.getElementById("summaryArea");
+      const finalEstimateSelect = document.getElementById("finalEstimateSelect");
+      const saveFinalEstimateBtn = document.getElementById("saveFinalEstimateBtn");
+      const resetBoardBtn = document.getElementById("resetBoardBtn");
+      const pointDeckPreview = document.getElementById("pointDeckPreview");
+
+      const sessionNameInput = document.getElementById("sessionNameInput");
+      const joinSessionBtn = document.getElementById("joinSessionBtn");
+      const sessionParticipantsChips = document.getElementById("sessionParticipantsChips");
+
+      function saveState() {
+        try {
+          const payload = JSON.stringify({
+            stories,
+            nextStoryId,
+            sessionParticipants,
+          });
+          localStorage.setItem("scrumEstimatorState", payload);
+        } catch (e) {
+          console.warn("Could not save state:", e);
+        }
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem("scrumEstimatorState");
+          if (!raw) return;
+          const parsed = JSON.parse(raw);
+          stories = parsed.stories || [];
+          nextStoryId = parsed.nextStoryId || 1;
+          sessionParticipants = parsed.sessionParticipants || [];
+        } catch (e) {
+          console.warn("Could not load state:", e);
+        }
+      }
+
+      function renderStories() {
+        storiesTableBody.innerHTML = "";
+        if (!stories.length) {
+          noStoriesMsg.style.display = "block";
+          return;
+        }
+        noStoriesMsg.style.display = "none";
+
+        stories.forEach((story) => {
+          const tr = document.createElement("tr");
+
+          const titleTd = document.createElement("td");
+          titleTd.innerHTML =
+            "<strong>" +
+            escapeHtml(story.title || "Untitled story") +
+            "</strong>" +
+            (story.description
+              ? '<div class="muted">' +
+                escapeHtml(
+                  story.description.length > 80
+                    ? story.description.slice(0, 77) + "..."
+                    : story.description
+                ) +
+                "</div>"
+              : "");
+          tr.appendChild(titleTd);
+
+          const estimateTd = document.createElement("td");
+          if (
+            story.finalEstimate !== null &&
+            story.finalEstimate !== undefined &&
+            story.finalEstimate !== ""
+          ) {
+            estimateTd.innerHTML =
+              '<span class="badge">' +
+              escapeHtml(String(story.finalEstimate)) +
+              " pts</span>";
+          } else {
+            estimateTd.innerHTML = '<span class="badge neutral">Not set</span>';
+          }
+          tr.appendChild(estimateTd);
+
+          const statusTd = document.createElement("td");
+          const readyCount = countVotes(story);
+          const totalMembers = sessionParticipants.length;
+          statusTd.innerHTML =
+            '<span class="muted">' +
+            readyCount +
+            " / " +
+            totalMembers +
+            " voted</span>";
+          tr.appendChild(statusTd);
+
+          const actionsTd = document.createElement("td");
+          const estBtn = document.createElement("button");
+          estBtn.type = "button";
+          estBtn.textContent = "Estimate";
+          estBtn.addEventListener("click", () => openEstimation(story.id));
+          actionsTd.appendChild(estBtn);
+
+          const delBtn = document.createElement("button");
+          delBtn.type = "button";
+          delBtn.textContent = "Delete";
+          delBtn.className = "secondary";
+          delBtn.style.marginLeft = "0.25rem";
+          delBtn.addEventListener("click", () => {
+            if (confirm("Delete this story?")) {
+              stories = stories.filter((s) => s.id !== story.id);
+              if (currentStoryId === story.id) {
+                closeEstimation();
+              }
+              renderStories();
+              saveState();
+            }
+          });
+          actionsTd.appendChild(delBtn);
+
+          tr.appendChild(actionsTd);
+
+          storiesTableBody.appendChild(tr);
+        });
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function countVotes(story) {
+        if (!story.votes) return 0;
+        return Object.values(story.votes).filter(
+          (v) => v !== null && v !== undefined && v !== ""
+        ).length;
+      }
+
+      function addStory() {
+        const title = storyTitleInput.value.trim();
+        const description = storyDescInput.value.trim();
+        if (!title) {
+          alert("Please enter a story title.");
+          return;
+        }
+        const story = {
+          id: nextStoryId++,
+          title,
+          description,
+          finalEstimate: "",
+          votes: {},
+          revealed: false,
+        };
+        stories.push(story);
+        storyTitleInput.value = "";
+        storyDescInput.value = "";
+        renderStories();
+        saveState();
+      }
+
+      function openEstimation(storyId) {
+        const story = stories.find((s) => s.id === storyId);
+        if (!story) return;
+        if (!sessionParticipants.length) {
+          alert("Please have participants join the session first.");
+          return;
+        }
+        currentStoryId = storyId;
+        estStoryTitle.textContent = story.title || "Untitled story";
+        estStoryDesc.textContent = story.description || "";
+        estimationPanel.style.display = "flex";
+        estimationPanel.scrollTop = 0;
+        renderPointDeckPreview();
+        renderFinalEstimateSelect(story);
+        renderMemberVotes(story);
+        renderSummary(story);
+      }
+
+      function closeEstimation() {
+        estimationPanel.style.display = "none";
+        currentStoryId = null;
+      }
+
+      function renderPointDeckPreview() {
+        pointDeckPreview.innerHTML = "";
+        allowedPoints.forEach((p) => {
+          const span = document.createElement("span");
+          span.className = "badge neutral";
+          span.textContent = String(p);
+          pointDeckPreview.appendChild(span);
+        });
+      }
+
+      function renderMemberVotes(story) {
+        memberVotesContainer.innerHTML = "";
+        sessionParticipants.forEach((member) => {
+          const card = document.createElement("div");
+          card.className = "member-card";
+
+          const header = document.createElement("div");
+          header.className = "member-header";
+          const nameSpan = document.createElement("span");
+          nameSpan.textContent = member;
+          const statusSpan = document.createElement("span");
+          statusSpan.className = "vote-status";
+          const voteValue = story.votes ? story.votes[member] : null;
+          if (voteValue !== null && voteValue !== undefined && voteValue !== "") {
+            statusSpan.textContent = story.revealed
+              ? `Voted: ${voteValue}`
+              : "Vote locked in";
+            statusSpan.classList.add("ready");
+          } else {
+            statusSpan.textContent = "No vote yet";
+          }
+          header.appendChild(nameSpan);
+          header.appendChild(statusSpan);
+          card.appendChild(header);
+
+          const btnRow = document.createElement("div");
+          allowedPoints.forEach((p) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "point-button";
+            btn.textContent = String(p);
+            const isSelected = voteValue === p;
+            if (isSelected) {
+              btn.classList.add("selected");
+            }
+            btn.addEventListener("click", () => {
+              setVoteForMember(story.id, member, p);
+            });
+            btnRow.appendChild(btn);
+          });
+          card.appendChild(btnRow);
+
+          memberVotesContainer.appendChild(card);
+        });
+      }
+
+      function setVoteForMember(storyId, member, value) {
+        const story = stories.find((s) => s.id === storyId);
+        if (!story) return;
+        if (!story.votes) story.votes = {};
+        story.votes[member] = value;
+        renderMemberVotes(story);
+        renderSummary(story);
+        renderStories();
+        saveState();
+      }
+
+      function renderSummary(story) {
+        summaryArea.innerHTML = "";
+        const votes = story.votes || {};
+        const values = Object.values(votes).filter(
+          (v) => v !== null && v !== undefined && v !== ""
+        );
+        if (!values.length) {
+          summaryArea.innerHTML =
+            '<div class="muted">No votes yet. Ask your team to pick their cards.</div>';
+          return;
+        }
+
+        const numericVotes = values.filter((v) => typeof v === "number");
+        const questionVotes = values.filter((v) => v === "?");
+
+        let html = "";
+
+        if (story.revealed) {
+          if (numericVotes.length) {
+            const min = Math.min(...numericVotes);
+            const max = Math.max(...numericVotes);
+            const avg =
+              numericVotes.reduce((sum, v) => sum + v, 0) / numericVotes.length;
+
+            const mode = computeMode(numericVotes);
+            html +=
+              '<div class="summary-line"><strong>Summary:</strong> ' +
+              "min " +
+              min +
+              ", max " +
+              max +
+              ", avg " +
+              avg.toFixed(2) +
+              ", mode " +
+              mode +
+              ".</div>";
+          } else {
+            html +=
+              '<div class="summary-line"><strong>Summary:</strong> No numeric votes yet.</div>';
+          }
+
+          if (questionVotes.length) {
+            html +=
+              '<div class="summary-line">There are ' +
+              questionVotes.length +
+              ' "<strong>?</strong>" votes – this may indicate uncertainty or missing info.</div>';
+          }
+        } else {
+          const readyCount = numericVotes.length + questionVotes.length;
+          const totalMembers = sessionParticipants.length;
+          html +=
+            '<div class="summary-line">' +
+            readyCount +
+            " / " +
+            totalMembers +
+            " votes in. Reveal when everyone is ready.</div>";
+        }
+
+        summaryArea.innerHTML = html;
+      }
+
+      function computeMode(nums) {
+        const counts = {};
+        nums.forEach((n) => {
+          counts[n] = (counts[n] || 0) + 1;
+        });
+        let best = nums[0];
+        let bestCount = 0;
+        Object.keys(counts).forEach((k) => {
+          const val = Number(k);
+          const count = counts[k];
+          if (count > bestCount || (count === bestCount && val < best)) {
+            best = val;
+            bestCount = count;
+          }
+        });
+        return best;
+      }
+
+      function renderFinalEstimateSelect(story) {
+        finalEstimateSelect.innerHTML = '<option value="">— choose —</option>';
+        allowedPoints.forEach((p) => {
+          if (p === "?") return; // usually final estimate shouldn't be "?"
+          const opt = document.createElement("option");
+          opt.value = String(p);
+          opt.textContent = String(p);
+          finalEstimateSelect.appendChild(opt);
+        });
+        if (
+          story.finalEstimate !== null &&
+          story.finalEstimate !== undefined &&
+          story.finalEstimate !== ""
+        ) {
+          finalEstimateSelect.value = String(story.finalEstimate);
+        } else {
+          finalEstimateSelect.value = "";
+        }
+      }
+
+      function revealVotesForCurrent() {
+        const story = stories.find((s) => s.id === currentStoryId);
+        if (!story) return;
+        story.revealed = true;
+        renderMemberVotes(story);
+        renderSummary(story);
+        saveState();
+      }
+
+      function hideVotesForCurrent() {
+        const story = stories.find((s) => s.id === currentStoryId);
+        if (!story) return;
+        story.revealed = false;
+        renderMemberVotes(story);
+        renderSummary(story);
+        saveState();
+      }
+
+      function saveFinalEstimate() {
+        const story = stories.find((s) => s.id === currentStoryId);
+        if (!story) return;
+        const val = finalEstimateSelect.value;
+        if (!val) {
+          alert("Please select a final estimate value.");
+          return;
+        }
+        const numVal = Number(val);
+        story.finalEstimate = isNaN(numVal) ? val : numVal;
+        renderStories();
+        saveState();
+        alert("Final estimate saved for this story.");
+      }
+
+      function resetBoard() {
+        if (
+          !confirm(
+            "This will clear all stories, votes, and session participants from this browser. Continue?"
+          )
+        ) {
+          return;
+        }
+        stories = [];
+        nextStoryId = 1;
+        currentStoryId = null;
+        sessionParticipants = [];
+        saveState();
+        renderStories();
+        renderSessionParticipants();
+        closeEstimation();
+      }
+
+      function renderSessionParticipants() {
+        if (!sessionParticipants.length) {
+          sessionParticipantsChips.innerHTML = "No one has joined yet.";
+          sessionParticipantsChips.classList.add("muted");
+          return;
+        }
+
+        sessionParticipantsChips.classList.remove("muted");
+        sessionParticipantsChips.innerHTML = "";
+
+        sessionParticipants.forEach((name, idx) => {
+          const chip = document.createElement("span");
+          chip.className = "chip";
+          chip.textContent = name;
+
+          const x = document.createElement("span");
+          x.textContent = "×";
+          x.title = "Leave session";
+          x.addEventListener("click", () => {
+            sessionParticipants.splice(idx, 1);
+            renderSessionParticipants();
+            saveState();
+          });
+
+          chip.appendChild(x);
+          sessionParticipantsChips.appendChild(chip);
+        });
+      }
+
+      function joinSession() {
+        const name = (sessionNameInput.value || "").trim();
+        if (!name) return;
+        if (!sessionParticipants.includes(name)) {
+          sessionParticipants.push(name);
+          localStorage.setItem("scrumEstimatorLastName", name);
+          saveState();
+        }
+        sessionNameInput.value = "";
+        renderSessionParticipants();
+      }
+
+      // Event wiring
+      addStoryBtn.addEventListener("click", addStory);
+      closeEstimationBtn.addEventListener("click", closeEstimation);
+      revealVotesBtn.addEventListener("click", revealVotesForCurrent);
+      hideVotesBtn.addEventListener("click", hideVotesForCurrent);
+      saveFinalEstimateBtn.addEventListener("click", saveFinalEstimate);
+      resetBoardBtn.addEventListener("click", resetBoard);
+
+      joinSessionBtn.addEventListener("click", joinSession);
+      sessionNameInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          joinSession();
+        }
+      });
+
+      estimationPanel.addEventListener("click", (e) => {
+        if (e.target === estimationPanel) {
+          closeEstimation();
+        }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && estimationPanel.style.display === "flex") {
+          closeEstimation();
+        }
+      });
+
+      // Init
+      loadState();
+      renderStories();
+      renderSessionParticipants();
+
+      // Auto-prompt for name when the site opens (per browser)
+      if (!sessionParticipants.length) {
+        setTimeout(() => {
+          const suggested =
+            localStorage.getItem("scrumEstimatorLastName") || "";
+          const name = window.prompt(
+            "Enter your name to join this pointing session:",
+            suggested
+          );
+          if (name && name.trim()) {
+            const clean = name.trim();
+            if (!sessionParticipants.includes(clean)) {
+              sessionParticipants.push(clean);
+              localStorage.setItem("scrumEstimatorLastName", clean);
+              saveState();
+              renderSessionParticipants();
+            }
+          }
+        }, 150);
+      }
+    })();
+  </script>
+</body>
+</html>
