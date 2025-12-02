@@ -6,6 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
+    /* NEW: make sizing saner so 100% width inputs don't overflow flex rows */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
     :root { font-family: system-ui, sans-serif; background: #f5f5f7; color: #111; }
     body { margin: 0; background: #f5f5f7; }
     .container { max-width: 1100px; margin: auto; padding: 1.5rem; }
@@ -16,17 +21,35 @@
       background: white; padding: 1rem 1.25rem; border-radius: 0.75rem;
       box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 1rem;
     }
-    .row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: flex-start; /* less likely to visually overlap */
+    }
+
+    /* Make children shrink properly inside flex rows */
+    .row > div {
+      min-width: 0;
+      flex: 1 1 220px;
+    }
+
     label { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem; color: #555; }
 
     input, textarea, select {
-      width: 100%; padding: 0.5rem 0.75rem; border-radius: 0.5rem;
-      border: 1px solid #ccc; background: #fafafa;
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      border: 1px solid #ccc;
+      background: #fafafa;
+      font: inherit;
     }
 
     button {
       border-radius: 999px; border: none; padding: 0.45rem 0.9rem;
       background: #2563eb; color: white; cursor: pointer; font-weight: 500;
+      font: inherit;
     }
     button.secondary { background: #e5e7eb; color: #111; }
 
@@ -55,6 +78,7 @@
     .estimation-panel {
       position: fixed; inset: 0; background: rgba(0,0,0,0.35);
       display: none; align-items: center; justify-content: center;
+      z-index: 9999; /* ensure it sits above main content when open */
     }
     .estimation-inner {
       background: white; max-width: 900px; width: 100%; padding: 1.25rem;
@@ -62,6 +86,18 @@
     }
 
     .flex-between { display:flex; justify-content:space-between; align-items:center; gap:1rem; }
+
+    /* NEW: make rows vertical on narrow screens so nothing overlaps */
+    @media (max-width: 700px) {
+      .row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .row > div[style*="flex:0 0 auto"] {
+        /* button containers on their own line */
+        margin-top: 0.25rem;
+      }
+    }
   </style>
 </head>
 <body>
