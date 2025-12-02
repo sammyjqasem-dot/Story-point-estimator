@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
-    /* NEW: make sizing saner so 100% width inputs don't overflow flex rows */
+    /* Make layout predictable */
     *, *::before, *::after {
       box-sizing: border-box;
     }
@@ -26,10 +26,8 @@
       display: flex;
       flex-wrap: wrap;
       gap: 1rem;
-      align-items: flex-start; /* less likely to visually overlap */
+      align-items: flex-start;
     }
-
-    /* Make children shrink properly inside flex rows */
     .row > div {
       min-width: 0;
       flex: 1 1 220px;
@@ -78,7 +76,7 @@
     .estimation-panel {
       position: fixed; inset: 0; background: rgba(0,0,0,0.35);
       display: none; align-items: center; justify-content: center;
-      z-index: 9999; /* ensure it sits above main content when open */
+      z-index: 9999;
     }
     .estimation-inner {
       background: white; max-width: 900px; width: 100%; padding: 1.25rem;
@@ -87,14 +85,12 @@
 
     .flex-between { display:flex; justify-content:space-between; align-items:center; gap:1rem; }
 
-    /* NEW: make rows vertical on narrow screens so nothing overlaps */
     @media (max-width: 700px) {
       .row {
         flex-direction: column;
         align-items: stretch;
       }
       .row > div[style*="flex:0 0 auto"] {
-        /* button containers on their own line */
         margin-top: 0.25rem;
       }
     }
@@ -173,14 +169,12 @@
   </div>
 </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-  import {
-    getFirestore, collection, doc, addDoc, setDoc, updateDoc,
-    deleteDoc, onSnapshot, getDocs, serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+<!-- Firebase compat SDKs from CDN -->
+<script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore-compat.js"></script>
 
-  // 🔥 Your Firebase config (from console)
+<script>
+  // 🔥 Your Firebase config (unchanged)
   const firebaseConfig = {
     apiKey: "AIzaSyDXqR61e64sBSz7lYHoLcSUweKsWtG3O1o",
     authDomain: "scrum-pointing-69bb7.firebaseapp.com",
@@ -191,8 +185,9 @@
     measurementId: "G-2LEBFZ12P2"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  // Initialize Firebase (compat style)
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
   // Single shared session
   const sessionId = "default-session";
@@ -231,20 +226,31 @@
 
   async function joinSession() {
     const name = sessionNameInput.value.trim();
-    if (!name) return alert("Enter your name");
+    if (!name) {
+      alert("Enter your name");
+      return;
+    }
     currentUser = name;
     localStorage.setItem("sp_user", name);
 
-    await setDoc(doc(db, "sessions", sessionId, "participants", name), {
+    const ref = db
+      .collection("sessions").doc(sessionId)
+      .collection("participants").doc(name);
+
+    await ref.set({
       name,
-      joinedAt: serverTimestamp(),
-    });
+      joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
 
     sessionNameInput.value = "";
   }
 
   async function removeParticipant(name) {
-    await deleteDoc(doc(db, "sessions", sessionId, "participants", name));
+    const ref = db
+      .collection("sessions").doc(sessionId)
+      .collection("participants").doc(name);
+
+    await ref.delete();
     if (name === currentUser) {
       currentUser = "";
       localStorage.removeItem("sp_user");
@@ -253,15 +259,19 @@
 
   async function addStory() {
     const title = storyTitleInput.value.trim();
-    if (!title) return alert("Enter a story title");
+    if (!title) {
+      alert("Enter a story title");
+      return;
+    }
     const desc = storyDescInput.value.trim();
 
-    await addDoc(collection(db, "sessions", sessionId, "stories"), {
+    const col = db.collection("sessions").doc(sessionId).collection("stories");
+    await col.add({
       title,
       description: desc,
       finalEstimate: "",
       revealed: false,
-      createdAt: serverTimestamp(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
 
     storyTitleInput.value = "";
@@ -270,53 +280,62 @@
 
   async function deleteStory(id) {
     if (!confirm("Delete story?")) return;
-    const storyRef = doc(db, "sessions", sessionId, "stories", id);
-    const votesCol = collection(storyRef, "votes");
-    const votesSnap = await getDocs(votesCol);
 
-    for (const v of votesSnap.docs) {
-      await deleteDoc(v.ref);
+    const storyRef = db.collection("sessions").doc(sessionId).collection("stories").doc(id);
+    const votesCol = storyRef.collection("votes");
+    const votesSnap = await votesCol.get();
+
+    for (const docSnap of votesSnap.docs) {
+      await docSnap.ref.delete();
     }
-    await deleteDoc(storyRef);
+    await storyRef.delete();
+
     if (currentStoryId === id) closeEstimation();
   }
 
   async function setVote(point) {
     if (!currentStoryId) return;
-    if (!currentUser) return alert("Join the session first");
+    if (!currentUser) {
+      alert("Join the session first");
+      return;
+    }
 
-    await setDoc(
-      doc(db, "sessions", sessionId, "stories", currentStoryId, "votes", currentUser),
-      { value: point }
-    );
+    const voteRef = db
+      .collection("sessions").doc(sessionId)
+      .collection("stories").doc(currentStoryId)
+      .collection("votes").doc(currentUser);
+
+    await voteRef.set({ value: point });
   }
 
   async function revealVotes() {
     if (!currentStoryId) return;
-    await updateDoc(doc(db, "sessions", sessionId, "stories", currentStoryId), {
-      revealed: true,
-    });
+    const storyRef = db.collection("sessions").doc(sessionId)
+      .collection("stories").doc(currentStoryId);
+    await storyRef.update({ revealed: true });
   }
 
   async function hideVotes() {
     if (!currentStoryId) return;
-    await updateDoc(doc(db, "sessions", sessionId, "stories", currentStoryId), {
-      revealed: false,
-    });
+    const storyRef = db.collection("sessions").doc(sessionId)
+      .collection("stories").doc(currentStoryId);
+    await storyRef.update({ revealed: false });
   }
 
   async function saveFinalEstimate() {
     if (!currentStoryId) return;
     const val = finalEstimateSelect.value;
-    if (!val) return alert("Choose a final estimate");
-
+    if (!val) {
+      alert("Choose a final estimate");
+      return;
+    }
     const num = Number(val);
     const finalVal = isNaN(num) ? val : num;
 
-    await updateDoc(doc(db, "sessions", sessionId, "stories", currentStoryId), {
-      finalEstimate: finalVal,
-    });
+    const storyRef = db.collection("sessions").doc(sessionId)
+      .collection("stories").doc(currentStoryId);
 
+    await storyRef.update({ finalEstimate: finalVal });
     alert("Saved.");
   }
 
@@ -467,15 +486,15 @@
 
     if (unsubscribeVotes) unsubscribeVotes();
 
-    unsubscribeVotes = onSnapshot(
-      collection(db, "sessions", sessionId, "stories", storyId, "votes"),
-      (snap) => {
-        currentVotes = {};
-        snap.forEach((d) => (currentVotes[d.id] = d.data().value));
-        renderVotes(story);
-        renderSummary(story);
-      }
-    );
+    const votesCol = db.collection("sessions").doc(sessionId)
+      .collection("stories").doc(storyId).collection("votes");
+
+    unsubscribeVotes = votesCol.onSnapshot((snap) => {
+      currentVotes = {};
+      snap.forEach((d) => { currentVotes[d.id] = d.data().value; });
+      renderVotes(story);
+      renderSummary(story);
+    });
 
     renderFinalEstimateOptions(story);
     estimationPanel.style.display = "flex";
@@ -488,24 +507,37 @@
   }
 
   // Live Firestore subscriptions
-  onSnapshot(collection(db, "sessions", sessionId, "participants"), (snap) => {
-    participants = snap.docs.map((d) => d.id);
-    renderParticipants();
-  });
+  db.collection("sessions").doc(sessionId)
+    .collection("participants")
+    .onSnapshot((snap) => {
+      participants = snap.docs.map((d) => d.id).sort();
+      renderParticipants();
+    });
 
-  onSnapshot(collection(db, "sessions", sessionId, "stories"), (snap) => {
-    stories = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    stories.sort((a, b) => (a.createdAt?.seconds ?? 0) - (b.createdAt?.seconds ?? 0));
-    renderStories();
-  });
+  db.collection("sessions").doc(sessionId)
+    .collection("stories")
+    .onSnapshot((snap) => {
+      stories = snap.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      }));
+      stories.sort((a, b) => {
+        const aT = a.createdAt && a.createdAt.seconds ? a.createdAt.seconds : 0;
+        const bT = b.createdAt && b.createdAt.seconds ? b.createdAt.seconds : 0;
+        return aT - bT;
+      });
+      renderStories();
+    });
 
   // Event handlers
-  joinSessionBtn.onclick = joinSession;
-  addStoryBtn.onclick = addStory;
+  joinSessionBtn.onclick = () => { joinSession().catch(err => alert(err.message)); };
+  addStoryBtn.onclick = () => { addStory().catch(err => alert(err.message)); };
+
   closeEstimationBtn.onclick = closeEstimation;
-  revealVotesBtn.onclick = revealVotes;
-  hideVotesBtn.onclick = hideVotes;
-  saveFinalEstimateBtn.onclick = saveFinalEstimate;
+  revealVotesBtn.onclick = () => { revealVotes().catch(err => alert(err.message)); };
+  hideVotesBtn.onclick = () => { hideVotes().catch(err => alert(err.message)); };
+  saveFinalEstimateBtn.onclick = () => { saveFinalEstimate().catch(err => alert(err.message)); };
+
   estimationPanel.onclick = (e) => { if (e.target === estimationPanel) closeEstimation(); };
 </script>
 </body>
