@@ -2,981 +2,475 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Story Point Estimator</title>
+  <title>Story Point Estimator (Firebase)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <style>
-    :root {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f5f5f7;
-      color: #111827;
-    }
-
-    body {
-      margin: 0;
-      padding: 0;
-      background: #f5f5f7;
-    }
-
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 1.5rem;
-    }
-
-    h1 {
-      font-size: 1.8rem;
-      margin-bottom: 0.5rem;
-    }
-
-    h2 {
-      font-size: 1.3rem;
-      margin-top: 1.2rem;
-      margin-bottom: 0.5rem;
-    }
+    :root { font-family: system-ui, sans-serif; background: #f5f5f7; color: #111; }
+    body { margin: 0; background: #f5f5f7; }
+    .container { max-width: 1100px; margin: auto; padding: 1.5rem; }
+    h1 { font-size: 1.8rem; margin-bottom: 0.25rem; }
+    h2 { font-size: 1.3rem; margin: 1.2rem 0 0.5rem; }
 
     .card {
-      background: #ffffff;
-      border-radius: 0.75rem;
-      padding: 1rem 1.25rem;
-      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
-      margin-bottom: 1rem;
+      background: white; padding: 1rem 1.25rem; border-radius: 0.75rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 1rem;
     }
+    .row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+    label { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem; color: #555; }
 
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      align-items: center;
-    }
-
-    .row > * {
-      flex: 1 1 200px;
-    }
-
-    label {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-      color: #4b5563;
-    }
-
-    input[type="text"],
-    textarea,
-    select {
-      width: 100%;
-      padding: 0.5rem 0.75rem;
-      border-radius: 0.5rem;
-      border: 1px solid #d1d5db;
-      font-size: 0.9rem;
-      box-sizing: border-box;
-      background: #f9fafb;
-    }
-
-    textarea {
-      min-height: 60px;
-      resize: vertical;
+    input, textarea, select {
+      width: 100%; padding: 0.5rem 0.75rem; border-radius: 0.5rem;
+      border: 1px solid #ccc; background: #fafafa;
     }
 
     button {
-      border-radius: 999px;
-      border: none;
-      padding: 0.45rem 0.9rem;
-      font-size: 0.9rem;
-      font-weight: 500;
-      cursor: pointer;
-      background: #2563eb;
-      color: white;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      transition: background 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
-      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
-      white-space: nowrap;
+      border-radius: 999px; border: none; padding: 0.45rem 0.9rem;
+      background: #2563eb; color: white; cursor: pointer; font-weight: 500;
     }
+    button.secondary { background: #e5e7eb; color: #111; }
 
-    button:hover {
-      background: #1d4ed8;
-      transform: translateY(-1px);
-      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
-    }
-
-    button:active {
-      transform: translateY(0);
-      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
-    }
-
-    button.secondary {
-      background: #e5e7eb;
-      color: #111827;
-      box-shadow: none;
-    }
-
-    button.secondary:hover {
-      background: #d1d5db;
-      box-shadow: none;
-    }
-
-    button.danger {
-      background: #ef4444;
-      box-shadow: 0 6px 16px rgba(239, 68, 68, 0.25);
-    }
-
-    button.danger:hover {
-      background: #dc2626;
-    }
+    .muted { font-size: 0.8rem; color: #6b7280; }
 
     .chip {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.25rem 0.7rem;
-      border-radius: 999px;
-      background: #e5f0ff;
-      color: #1e3a8a;
-      font-size: 0.8rem;
-      font-weight: 500;
-      margin: 0.15rem;
+      display: inline-flex; align-items: center;
+      padding: 0.25rem 0.7rem; background: #eef; border-radius: 999px;
+      font-size: 0.8rem; margin: 0.15rem;
     }
+    .chip span { margin-left: 0.35rem; cursor: pointer; }
 
-    .chip span {
-      margin-left: 0.35rem;
-      cursor: pointer;
-      font-size: 0.85em;
-      opacity: 0.7;
-    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { padding: 0.55rem; border-bottom: 1px solid #eee; }
 
-    .chip span:hover {
-      opacity: 1;
-    }
+    .member-card { background: #f9f9f9; border-radius: 0.75rem; padding: 0.75rem; margin: 0.5rem 0; }
+    .member-header { display: flex; justify-content: space-between; }
 
-    .muted {
-      font-size: 0.8rem;
-      color: #6b7280;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.9rem;
-      margin-top: 0.5rem;
-    }
-
-    th,
-    td {
-      padding: 0.55rem 0.5rem;
-      border-bottom: 1px solid #e5e7eb;
-      text-align: left;
-    }
-
-    th {
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      color: #6b7280;
-      letter-spacing: 0.02em;
-    }
-
-    tr:hover td {
-      background: #f9fafb;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.15rem 0.5rem;
-      border-radius: 999px;
-      background: #ecfdf3;
-      color: #166534;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-
-    .badge.neutral {
-      background: #f3f4f6;
-      color: #4b5563;
-    }
-
-    /* More visible point buttons */
     .point-button {
-      padding: 0.45rem 0.75rem;
-      border-radius: 0.5rem;
-      border: 1px solid #9ca3af;
-      background: #f3f4f6;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: background 0.1s ease, border-color 0.1s ease, transform 0.05s ease;
-      margin: 0.15rem;
-      min-width: 2.6rem;
-      text-align: center;
-      color: #111827;
-      font-weight: 500;
+      padding: 0.4rem 0.75rem; border: 1px solid #999;
+      background: #f3f3f3; border-radius: 0.5rem;
+      cursor: pointer; margin: 0.15rem; min-width: 2.5rem;
     }
-
-    .point-button:hover {
-      background: #e5e7eb;
-      border-color: #6b7280;
-    }
-
-    .point-button.selected {
-      background: #2563eb !important;
-      border-color: #1d4ed8 !important;
-      color: white !important;
-      transform: translateY(-1px);
-    }
-
-    .member-card {
-      background: #f9fafb;
-      border-radius: 0.75rem;
-      padding: 0.75rem;
-      margin-bottom: 0.5rem;
-      border: 1px solid #e5e7eb;
-    }
-
-    .member-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.35rem;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-
-    .member-header span.vote-status {
-      font-weight: 500;
-      font-size: 0.75rem;
-      color: #6b7280;
-    }
-
-    .member-header span.vote-status.ready {
-      color: #16a34a;
-    }
-
-    .flex-between {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
-    }
+    .point-button.selected { background: #2563eb; color: white; border-color: #1d4ed8; }
 
     .estimation-panel {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.35);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
-      z-index: 50;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+      display: none; align-items: center; justify-content: center;
     }
-
     .estimation-inner {
-      max-width: 900px;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-      background: #ffffff;
-      border-radius: 1rem;
-      padding: 1.25rem 1.5rem 1rem;
-      box-shadow: 0 25px 70px rgba(15, 23, 42, 0.35);
+      background: white; max-width: 900px; width: 100%; padding: 1.25rem;
+      border-radius: 1rem; max-height: 90vh; overflow-y: auto;
     }
 
-    .est-header {
-      margin-bottom: 0.75rem;
-    }
-
-    .est-header h2 {
-      margin: 0;
-    }
-
-    .est-story-desc {
-      margin-top: 0.25rem;
-      font-size: 0.85rem;
-      color: #4b5563;
-      white-space: pre-wrap;
-    }
-
-    .summary-line {
-      font-size: 0.85rem;
-      color: #374151;
-      margin-top: 0.25rem;
-    }
-
-    .pill-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      align-items: center;
-      margin-top: 0.35rem;
-    }
-
-    .pill-label {
-      font-size: 0.8rem;
-      color: #6b7280;
-      font-weight: 500;
-    }
-
-    .final-select {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-top: 0.5rem;
-    }
-
-    .final-select select {
-      max-width: 120px;
-    }
-
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1rem;
-      flex-wrap: wrap;
-    }
-
-    @media (max-width: 600px) {
-      .row {
-        flex-direction: column;
-      }
-      .top-bar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-    }
+    .flex-between { display:flex; justify-content:space-between; align-items:center; gap:1rem; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="top-bar">
+
+<div class="container">
+  <h1>Story Point Estimator</h1>
+  <p class="muted">Real-time Planning Poker — powered by Firebase</p>
+
+  <div class="card">
+    <h2>1. Join This Session</h2>
+    <div class="row">
       <div>
-        <h1>Story Point Estimator</h1>
-        <div class="muted">Planning poker tool for your Scrum team</div>
+        <label>Your name</label>
+        <input id="sessionNameInput" placeholder="Enter your name to join" />
       </div>
-      <button class="secondary" id="resetBoardBtn" type="button">Reset board</button>
-    </div>
-
-    <!-- Session participants (also the voters) -->
-    <div class="card">
-      <h2>1. Session participants (voters)</h2>
-      <div class="row" style="align-items:flex-end;">
-        <div>
-          <label for="sessionNameInput">Your name</label>
-          <input
-            id="sessionNameInput"
-            type="text"
-            placeholder="Add your name to join this pointing session"
-          />
-          <div class="muted">
-            Everyone listed here will have a voting card in each story estimation.
-          </div>
-        </div>
-        <div style="flex:0 0 auto;">
-          <button id="joinSessionBtn" type="button">Join session</button>
-        </div>
-      </div>
-      <div id="sessionParticipantsChips" style="margin-top:0.5rem;" class="muted">
-        No one has joined yet.
+      <div style="flex:0 0 auto;">
+        <button id="joinSessionBtn">Join session</button>
       </div>
     </div>
-
-    <!-- Story list / creation -->
-    <div class="card">
-      <h2>2. Stories to estimate</h2>
-      <div class="row" style="align-items:flex-start; margin-bottom:0.75rem;">
-        <div>
-          <label for="storyTitleInput">Story title</label>
-          <input
-            id="storyTitleInput"
-            type="text"
-            placeholder="As a user, I want to..."
-          />
-        </div>
-        <div>
-          <label for="storyDescInput">Description (optional)</label>
-          <textarea
-            id="storyDescInput"
-            placeholder="Acceptance criteria, notes, links, etc."
-          ></textarea>
-        </div>
-        <div style="flex:0 0 auto;">
-          <button id="addStoryBtn" type="button">Add story</button>
-        </div>
-      </div>
-
-      <div id="storiesSection">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:40%;">Story</th>
-              <th style="width:20%;">Final estimate</th>
-              <th style="width:20%;">Status</th>
-              <th style="width:20%;">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="storiesTableBody">
-            <!-- Rows injected here -->
-          </tbody>
-        </table>
-        <div id="noStoriesMsg" class="muted" style="margin-top:0.5rem;">
-          No stories yet. Add one above to get started.
-        </div>
-      </div>
-    </div>
+    <div id="sessionParticipantsChips" style="margin-top:0.5rem;">No one has joined yet.</div>
   </div>
 
-  <!-- Estimation panel (modal) -->
-  <div id="estimationPanel" class="estimation-panel">
-    <div class="estimation-inner">
-      <div class="flex-between est-header">
-        <div>
-          <h2 id="estStoryTitle">Estimate story</h2>
-          <div class="est-story-desc" id="estStoryDesc"></div>
-        </div>
-        <div>
-          <button class="secondary" id="closeEstimationBtn" type="button">Close</button>
-        </div>
+  <div class="card">
+    <h2>2. Stories</h2>
+    <div class="row">
+      <div>
+        <label>Story title</label>
+        <input id="storyTitleInput" placeholder="As a user, I want to..." />
       </div>
-
-      <div class="muted" style="margin-bottom:0.5rem;">
-        Each participant chooses a card. Click <strong>Reveal votes</strong> when everyone is ready.
+      <div>
+        <label>Description</label>
+        <textarea id="storyDescInput" placeholder="Acceptance criteria (optional)"></textarea>
       </div>
-
-      <div class="flex-between" style="margin-bottom:0.75rem;">
-        <div class="pill-row">
-          <span class="pill-label">Quick deck:</span>
-          <div id="pointDeckPreview"></div>
-        </div>
-        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-          <button class="secondary" id="hideVotesBtn" type="button">Hide votes</button>
-          <button id="revealVotesBtn" type="button">Reveal votes</button>
-        </div>
-      </div>
-
-      <div id="summaryArea" style="margin-bottom:0.75rem;"></div>
-
-      <div id="memberVotesContainer"></div>
-
-      <div class="final-select">
-        <label for="finalEstimateSelect">Final estimate:</label>
-        <select id="finalEstimateSelect">
-          <option value="">— choose —</option>
-        </select>
-        <button id="saveFinalEstimateBtn" type="button">Save</button>
+      <div style="flex:0 0 auto;">
+        <button id="addStoryBtn">Add story</button>
       </div>
     </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Story</th>
+          <th>Final</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="storiesTableBody"></tbody>
+    </table>
+    <p id="noStoriesMsg" class="muted">No stories yet.</p>
   </div>
+</div>
 
-  <script>
-    (function () {
-      const allowedPoints = [0, 0.5, 1, 2, 3, 5, 8, 13, 20, 40, 100, "?"];
+<!-- Estimation Modal -->
+<div id="estimationPanel" class="estimation-panel">
+  <div class="estimation-inner">
+    <div class="flex-between">
+      <h2 id="estStoryTitle"></h2>
+      <button class="secondary" id="closeEstimationBtn">Close</button>
+    </div>
 
-      let stories = [];
-      let nextStoryId = 1;
-      let currentStoryId = null;
-      let sessionParticipants = [];
+    <p id="estStoryDesc" class="muted"></p>
 
-      const storyTitleInput = document.getElementById("storyTitleInput");
-      const storyDescInput = document.getElementById("storyDescInput");
-      const addStoryBtn = document.getElementById("addStoryBtn");
-      const storiesTableBody = document.getElementById("storiesTableBody");
-      const noStoriesMsg = document.getElementById("noStoriesMsg");
+    <div id="summaryArea" style="margin:1rem 0;"></div>
 
-      const estimationPanel = document.getElementById("estimationPanel");
-      const closeEstimationBtn = document.getElementById("closeEstimationBtn");
-      const estStoryTitle = document.getElementById("estStoryTitle");
-      const estStoryDesc = document.getElementById("estStoryDesc");
-      const memberVotesContainer = document.getElementById("memberVotesContainer");
-      const revealVotesBtn = document.getElementById("revealVotesBtn");
-      const hideVotesBtn = document.getElementById("hideVotesBtn");
-      const summaryArea = document.getElementById("summaryArea");
-      const finalEstimateSelect = document.getElementById("finalEstimateSelect");
-      const saveFinalEstimateBtn = document.getElementById("saveFinalEstimateBtn");
-      const resetBoardBtn = document.getElementById("resetBoardBtn");
-      const pointDeckPreview = document.getElementById("pointDeckPreview");
+    <div id="memberVotesContainer"></div>
 
-      const sessionNameInput = document.getElementById("sessionNameInput");
-      const joinSessionBtn = document.getElementById("joinSessionBtn");
-      const sessionParticipantsChips = document.getElementById("sessionParticipantsChips");
+    <label>Final estimate:</label>
+    <select id="finalEstimateSelect"></select>
+    <button id="saveFinalEstimateBtn">Save</button>
+    <button class="secondary" id="revealVotesBtn">Reveal votes</button>
+    <button class="secondary" id="hideVotesBtn">Hide votes</button>
+  </div>
+</div>
 
-      function saveState() {
-        try {
-          const payload = JSON.stringify({
-            stories,
-            nextStoryId,
-            sessionParticipants,
-          });
-          localStorage.setItem("scrumEstimatorState", payload);
-        } catch (e) {
-          console.warn("Could not save state:", e);
-        }
-      }
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+  import {
+    getFirestore, collection, doc, addDoc, setDoc, updateDoc,
+    deleteDoc, onSnapshot, getDocs, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-      function loadState() {
-        try {
-          const raw = localStorage.getItem("scrumEstimatorState");
-          if (!raw) return;
-          const parsed = JSON.parse(raw);
-          stories = parsed.stories || [];
-          nextStoryId = parsed.nextStoryId || 1;
-          sessionParticipants = parsed.sessionParticipants || [];
-        } catch (e) {
-          console.warn("Could not load state:", e);
-        }
-      }
+  // 🔥 Your Firebase config (from console)
+  const firebaseConfig = {
+    apiKey: "AIzaSyDXqR61e64sBSz7lYHoLcSUweKsWtG3O1o",
+    authDomain: "scrum-pointing-69bb7.firebaseapp.com",
+    projectId: "scrum-pointing-69bb7",
+    storageBucket: "scrum-pointing-69bb7.firebasestorage.app",
+    messagingSenderId: "165845012230",
+    appId: "1:165845012230:web:36aea56e951c1d012fd887",
+    measurementId: "G-2LEBFZ12P2"
+  };
 
-      function renderStories() {
-        storiesTableBody.innerHTML = "";
-        if (!stories.length) {
-          noStoriesMsg.style.display = "block";
-          return;
-        }
-        noStoriesMsg.style.display = "none";
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-        stories.forEach((story) => {
-          const tr = document.createElement("tr");
+  // Single shared session
+  const sessionId = "default-session";
 
-          const titleTd = document.createElement("td");
-          titleTd.innerHTML =
-            "<strong>" +
-            escapeHtml(story.title || "Untitled story") +
-            "</strong>" +
-            (story.description
-              ? '<div class="muted">' +
-                escapeHtml(
-                  story.description.length > 80
-                    ? story.description.slice(0, 77) + "..."
-                    : story.description
-                ) +
-                "</div>"
-              : "");
-          tr.appendChild(titleTd);
+  const sessionNameInput = document.getElementById("sessionNameInput");
+  const joinSessionBtn = document.getElementById("joinSessionBtn");
+  const sessionParticipantsChips = document.getElementById("sessionParticipantsChips");
 
-          const estimateTd = document.createElement("td");
-          if (
-            story.finalEstimate !== null &&
-            story.finalEstimate !== undefined &&
-            story.finalEstimate !== ""
-          ) {
-            estimateTd.innerHTML =
-              '<span class="badge">' +
-              escapeHtml(String(story.finalEstimate)) +
-              " pts</span>";
-          } else {
-            estimateTd.innerHTML = '<span class="badge neutral">Not set</span>';
-          }
-          tr.appendChild(estimateTd);
+  const storyTitleInput = document.getElementById("storyTitleInput");
+  const storyDescInput = document.getElementById("storyDescInput");
+  const addStoryBtn = document.getElementById("addStoryBtn");
 
-          const statusTd = document.createElement("td");
-          const readyCount = countVotes(story);
-          const totalMembers = sessionParticipants.length;
-          statusTd.innerHTML =
-            '<span class="muted">' +
-            readyCount +
-            " / " +
-            totalMembers +
-            " voted</span>";
-          tr.appendChild(statusTd);
+  const storiesTableBody = document.getElementById("storiesTableBody");
+  const noStoriesMsg = document.getElementById("noStoriesMsg");
 
-          const actionsTd = document.createElement("td");
-          const estBtn = document.createElement("button");
-          estBtn.type = "button";
-          estBtn.textContent = "Estimate";
-          estBtn.addEventListener("click", () => openEstimation(story.id));
-          actionsTd.appendChild(estBtn);
+  const estimationPanel = document.getElementById("estimationPanel");
+  const closeEstimationBtn = document.getElementById("closeEstimationBtn");
+  const estStoryTitle = document.getElementById("estStoryTitle");
+  const estStoryDesc = document.getElementById("estStoryDesc");
+  const memberVotesContainer = document.getElementById("memberVotesContainer");
 
-          const delBtn = document.createElement("button");
-          delBtn.type = "button";
-          delBtn.textContent = "Delete";
-          delBtn.className = "secondary";
-          delBtn.style.marginLeft = "0.25rem";
-          delBtn.addEventListener("click", () => {
-            if (confirm("Delete this story?")) {
-              stories = stories.filter((s) => s.id !== story.id);
-              if (currentStoryId === story.id) {
-                closeEstimation();
-              }
-              renderStories();
-              saveState();
-            }
-          });
-          actionsTd.appendChild(delBtn);
+  const revealVotesBtn = document.getElementById("revealVotesBtn");
+  const hideVotesBtn = document.getElementById("hideVotesBtn");
+  const summaryArea = document.getElementById("summaryArea");
+  const finalEstimateSelect = document.getElementById("finalEstimateSelect");
+  const saveFinalEstimateBtn = document.getElementById("saveFinalEstimateBtn");
 
-          tr.appendChild(actionsTd);
+  let currentUser = localStorage.getItem("sp_user") || "";
+  let stories = [];
+  let participants = [];
+  let currentVotes = {};
+  let currentStoryId = null;
+  let unsubscribeVotes = null;
 
-          storiesTableBody.appendChild(tr);
-        });
-      }
+  const allowedPoints = [0, 0.5, 1, 2, 3, 5, 8, 13, 20, 40, 100, "?"];
 
-      function escapeHtml(str) {
-        return String(str)
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;");
-      }
+  async function joinSession() {
+    const name = sessionNameInput.value.trim();
+    if (!name) return alert("Enter your name");
+    currentUser = name;
+    localStorage.setItem("sp_user", name);
 
-      function countVotes(story) {
-        if (!story.votes) return 0;
-        return Object.values(story.votes).filter(
-          (v) => v !== null && v !== undefined && v !== ""
-        ).length;
-      }
+    await setDoc(doc(db, "sessions", sessionId, "participants", name), {
+      name,
+      joinedAt: serverTimestamp(),
+    });
 
-      function addStory() {
-        const title = storyTitleInput.value.trim();
-        const description = storyDescInput.value.trim();
-        if (!title) {
-          alert("Please enter a story title.");
-          return;
-        }
-        const story = {
-          id: nextStoryId++,
-          title,
-          description,
-          finalEstimate: "",
-          votes: {},
-          revealed: false,
-        };
-        stories.push(story);
-        storyTitleInput.value = "";
-        storyDescInput.value = "";
-        renderStories();
-        saveState();
-      }
+    sessionNameInput.value = "";
+  }
 
-      function openEstimation(storyId) {
-        const story = stories.find((s) => s.id === storyId);
-        if (!story) return;
-        if (!sessionParticipants.length) {
-          alert("Please have participants join the session first.");
-          return;
-        }
-        currentStoryId = storyId;
-        estStoryTitle.textContent = story.title || "Untitled story";
-        estStoryDesc.textContent = story.description || "";
-        estimationPanel.style.display = "flex";
-        estimationPanel.scrollTop = 0;
-        renderPointDeckPreview();
-        renderFinalEstimateSelect(story);
-        renderMemberVotes(story);
-        renderSummary(story);
-      }
+  async function removeParticipant(name) {
+    await deleteDoc(doc(db, "sessions", sessionId, "participants", name));
+    if (name === currentUser) {
+      currentUser = "";
+      localStorage.removeItem("sp_user");
+    }
+  }
 
-      function closeEstimation() {
-        estimationPanel.style.display = "none";
-        currentStoryId = null;
-      }
+  async function addStory() {
+    const title = storyTitleInput.value.trim();
+    if (!title) return alert("Enter a story title");
+    const desc = storyDescInput.value.trim();
 
-      function renderPointDeckPreview() {
-        pointDeckPreview.innerHTML = "";
-        allowedPoints.forEach((p) => {
-          const span = document.createElement("span");
-          span.className = "badge neutral";
-          span.textContent = String(p);
-          pointDeckPreview.appendChild(span);
-        });
-      }
+    await addDoc(collection(db, "sessions", sessionId, "stories"), {
+      title,
+      description: desc,
+      finalEstimate: "",
+      revealed: false,
+      createdAt: serverTimestamp(),
+    });
 
-      function renderMemberVotes(story) {
-        memberVotesContainer.innerHTML = "";
-        sessionParticipants.forEach((member) => {
-          const card = document.createElement("div");
-          card.className = "member-card";
+    storyTitleInput.value = "";
+    storyDescInput.value = "";
+  }
 
-          const header = document.createElement("div");
-          header.className = "member-header";
-          const nameSpan = document.createElement("span");
-          nameSpan.textContent = member;
-          const statusSpan = document.createElement("span");
-          statusSpan.className = "vote-status";
-          const voteValue = story.votes ? story.votes[member] : null;
-          if (voteValue !== null && voteValue !== undefined && voteValue !== "") {
-            statusSpan.textContent = story.revealed
-              ? `Voted: ${voteValue}`
-              : "Vote locked in";
-            statusSpan.classList.add("ready");
-          } else {
-            statusSpan.textContent = "No vote yet";
-          }
-          header.appendChild(nameSpan);
-          header.appendChild(statusSpan);
-          card.appendChild(header);
+  async function deleteStory(id) {
+    if (!confirm("Delete story?")) return;
+    const storyRef = doc(db, "sessions", sessionId, "stories", id);
+    const votesCol = collection(storyRef, "votes");
+    const votesSnap = await getDocs(votesCol);
 
-          const btnRow = document.createElement("div");
-          allowedPoints.forEach((p) => {
-            const btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "point-button";
-            btn.textContent = String(p);
-            const isSelected = voteValue === p;
-            if (isSelected) {
-              btn.classList.add("selected");
-            }
-            btn.addEventListener("click", () => {
-              setVoteForMember(story.id, member, p);
-            });
-            btnRow.appendChild(btn);
-          });
-          card.appendChild(btnRow);
+    for (const v of votesSnap.docs) {
+      await deleteDoc(v.ref);
+    }
+    await deleteDoc(storyRef);
+    if (currentStoryId === id) closeEstimation();
+  }
 
-          memberVotesContainer.appendChild(card);
-        });
-      }
+  async function setVote(point) {
+    if (!currentStoryId) return;
+    if (!currentUser) return alert("Join the session first");
 
-      function setVoteForMember(storyId, member, value) {
-        const story = stories.find((s) => s.id === storyId);
-        if (!story) return;
-        if (!story.votes) story.votes = {};
-        story.votes[member] = value;
-        renderMemberVotes(story);
-        renderSummary(story);
-        renderStories();
-        saveState();
-      }
+    await setDoc(
+      doc(db, "sessions", sessionId, "stories", currentStoryId, "votes", currentUser),
+      { value: point }
+    );
+  }
 
-      function renderSummary(story) {
-        summaryArea.innerHTML = "";
-        const votes = story.votes || {};
-        const values = Object.values(votes).filter(
-          (v) => v !== null && v !== undefined && v !== ""
-        );
-        if (!values.length) {
-          summaryArea.innerHTML =
-            '<div class="muted">No votes yet. Ask your team to pick their cards.</div>';
-          return;
-        }
+  async function revealVotes() {
+    if (!currentStoryId) return;
+    await updateDoc(doc(db, "sessions", sessionId, "stories", currentStoryId), {
+      revealed: true,
+    });
+  }
 
-        const numericVotes = values.filter((v) => typeof v === "number");
-        const questionVotes = values.filter((v) => v === "?");
+  async function hideVotes() {
+    if (!currentStoryId) return;
+    await updateDoc(doc(db, "sessions", sessionId, "stories", currentStoryId), {
+      revealed: false,
+    });
+  }
 
-        let html = "";
+  async function saveFinalEstimate() {
+    if (!currentStoryId) return;
+    const val = finalEstimateSelect.value;
+    if (!val) return alert("Choose a final estimate");
 
-        if (story.revealed) {
-          if (numericVotes.length) {
-            const min = Math.min(...numericVotes);
-            const max = Math.max(...numericVotes);
-            const avg =
-              numericVotes.reduce((sum, v) => sum + v, 0) / numericVotes.length;
+    const num = Number(val);
+    const finalVal = isNaN(num) ? val : num;
 
-            const mode = computeMode(numericVotes);
-            html +=
-              '<div class="summary-line"><strong>Summary:</strong> ' +
-              "min " +
-              min +
-              ", max " +
-              max +
-              ", avg " +
-              avg.toFixed(2) +
-              ", mode " +
-              mode +
-              ".</div>";
-          } else {
-            html +=
-              '<div class="summary-line"><strong>Summary:</strong> No numeric votes yet.</div>';
-          }
+    await updateDoc(doc(db, "sessions", sessionId, "stories", currentStoryId), {
+      finalEstimate: finalVal,
+    });
 
-          if (questionVotes.length) {
-            html +=
-              '<div class="summary-line">There are ' +
-              questionVotes.length +
-              ' "<strong>?</strong>" votes – this may indicate uncertainty or missing info.</div>';
-          }
-        } else {
-          const readyCount = numericVotes.length + questionVotes.length;
-          const totalMembers = sessionParticipants.length;
-          html +=
-            '<div class="summary-line">' +
-            readyCount +
-            " / " +
-            totalMembers +
-            " votes in. Reveal when everyone is ready.</div>";
-        }
+    alert("Saved.");
+  }
 
-        summaryArea.innerHTML = html;
-      }
+  function renderParticipants() {
+    if (!participants.length) {
+      sessionParticipantsChips.textContent = "No one has joined yet.";
+      return;
+    }
 
-      function computeMode(nums) {
-        const counts = {};
-        nums.forEach((n) => {
-          counts[n] = (counts[n] || 0) + 1;
-        });
-        let best = nums[0];
-        let bestCount = 0;
-        Object.keys(counts).forEach((k) => {
-          const val = Number(k);
-          const count = counts[k];
-          if (count > bestCount || (count === bestCount && val < best)) {
-            best = val;
-            bestCount = count;
-          }
-        });
-        return best;
-      }
+    sessionParticipantsChips.innerHTML = "";
+    participants.forEach((name) => {
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.textContent = name === currentUser ? `${name} (you)` : name;
 
-      function renderFinalEstimateSelect(story) {
-        finalEstimateSelect.innerHTML = '<option value="">— choose —</option>';
-        allowedPoints.forEach((p) => {
-          if (p === "?") return; // usually final estimate shouldn't be "?"
-          const opt = document.createElement("option");
-          opt.value = String(p);
-          opt.textContent = String(p);
-          finalEstimateSelect.appendChild(opt);
-        });
-        if (
-          story.finalEstimate !== null &&
-          story.finalEstimate !== undefined &&
-          story.finalEstimate !== ""
-        ) {
-          finalEstimateSelect.value = String(story.finalEstimate);
-        } else {
-          finalEstimateSelect.value = "";
-        }
-      }
+      const x = document.createElement("span");
+      x.textContent = "×";
+      x.onclick = () => removeParticipant(name);
 
-      function revealVotesForCurrent() {
-        const story = stories.find((s) => s.id === currentStoryId);
-        if (!story) return;
-        story.revealed = true;
-        renderMemberVotes(story);
-        renderSummary(story);
-        saveState();
-      }
+      chip.appendChild(x);
+      sessionParticipantsChips.appendChild(chip);
+    });
+  }
 
-      function hideVotesForCurrent() {
-        const story = stories.find((s) => s.id === currentStoryId);
-        if (!story) return;
-        story.revealed = false;
-        renderMemberVotes(story);
-        renderSummary(story);
-        saveState();
-      }
+  function renderStories() {
+    storiesTableBody.innerHTML = "";
+    if (!stories.length) {
+      noStoriesMsg.style.display = "block";
+      return;
+    }
+    noStoriesMsg.style.display = "none";
 
-      function saveFinalEstimate() {
-        const story = stories.find((s) => s.id === currentStoryId);
-        if (!story) return;
-        const val = finalEstimateSelect.value;
-        if (!val) {
-          alert("Please select a final estimate value.");
-          return;
-        }
-        const numVal = Number(val);
-        story.finalEstimate = isNaN(numVal) ? val : numVal;
-        renderStories();
-        saveState();
-        alert("Final estimate saved for this story.");
-      }
+    stories.forEach((story) => {
+      const tr = document.createElement("tr");
 
-      function resetBoard() {
-        if (
-          !confirm(
-            "This will clear all stories, votes, and session participants from this browser. Continue?"
-          )
-        ) {
-          return;
-        }
-        stories = [];
-        nextStoryId = 1;
-        currentStoryId = null;
-        sessionParticipants = [];
-        saveState();
-        renderStories();
-        renderSessionParticipants();
-        closeEstimation();
-      }
+      const td1 = document.createElement("td");
+      td1.innerHTML = `<b>${story.title}</b><br><span class="muted">${story.description || ""}</span>`;
 
-      function renderSessionParticipants() {
-        if (!sessionParticipants.length) {
-          sessionParticipantsChips.innerHTML = "No one has joined yet.";
-          sessionParticipantsChips.classList.add("muted");
-          return;
-        }
+      const td2 = document.createElement("td");
+      td2.textContent = story.finalEstimate || "–";
 
-        sessionParticipantsChips.classList.remove("muted");
-        sessionParticipantsChips.innerHTML = "";
+      const td3 = document.createElement("td");
+      td3.textContent = story.revealed
+        ? "Revealed"
+        : story.finalEstimate
+        ? "Done"
+        : "Pending";
 
-        sessionParticipants.forEach((name, idx) => {
-          const chip = document.createElement("span");
-          chip.className = "chip";
-          chip.textContent = name;
+      const td4 = document.createElement("td");
+      const btn = document.createElement("button");
+      btn.textContent = "Estimate";
+      btn.onclick = () => openEstimation(story.id);
+      td4.appendChild(btn);
 
-          const x = document.createElement("span");
-          x.textContent = "×";
-          x.title = "Leave session";
-          x.addEventListener("click", () => {
-            sessionParticipants.splice(idx, 1);
-            renderSessionParticipants();
-            saveState();
-          });
+      const del = document.createElement("button");
+      del.className = "secondary";
+      del.style.marginLeft = "0.5rem";
+      del.textContent = "✕";
+      del.onclick = () => deleteStory(story.id);
+      td4.appendChild(del);
 
-          chip.appendChild(x);
-          sessionParticipantsChips.appendChild(chip);
-        });
-      }
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tr.appendChild(td3);
+      tr.appendChild(td4);
 
-      function joinSession() {
-        const name = (sessionNameInput.value || "").trim();
-        if (!name) return;
-        if (!sessionParticipants.includes(name)) {
-          sessionParticipants.push(name);
-          localStorage.setItem("scrumEstimatorLastName", name);
-          saveState();
-        }
-        sessionNameInput.value = "";
-        renderSessionParticipants();
-      }
+      storiesTableBody.appendChild(tr);
+    });
+  }
 
-      // Event wiring
-      addStoryBtn.addEventListener("click", addStory);
-      closeEstimationBtn.addEventListener("click", closeEstimation);
-      revealVotesBtn.addEventListener("click", revealVotesForCurrent);
-      hideVotesBtn.addEventListener("click", hideVotesForCurrent);
-      saveFinalEstimateBtn.addEventListener("click", saveFinalEstimate);
-      resetBoardBtn.addEventListener("click", resetBoard);
+  function renderVotes(story) {
+    memberVotesContainer.innerHTML = "";
 
-      joinSessionBtn.addEventListener("click", joinSession);
-      sessionNameInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          joinSession();
-        }
+    participants.forEach((name) => {
+      const card = document.createElement("div");
+      card.className = "member-card";
+
+      const header = document.createElement("div");
+      header.className = "member-header";
+      header.innerHTML =
+        `<span>${name === currentUser ? name + " (you)" : name}</span>` +
+        `<span>${currentVotes[name] !== undefined ? "Voted" : "Waiting"}</span>`;
+      card.appendChild(header);
+
+      const btnRow = document.createElement("div");
+      allowedPoints.forEach((p) => {
+        const btn = document.createElement("button");
+        btn.className = "point-button";
+        btn.textContent = p;
+
+        if (currentVotes[name] === p) btn.classList.add("selected");
+        if (name !== currentUser) btn.disabled = true;
+
+        btn.onclick = () => setVote(p);
+        btnRow.appendChild(btn);
       });
 
-      estimationPanel.addEventListener("click", (e) => {
-        if (e.target === estimationPanel) {
-          closeEstimation();
-        }
-      });
+      card.appendChild(btnRow);
+      memberVotesContainer.appendChild(card);
+    });
+  }
 
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && estimationPanel.style.display === "flex") {
-          closeEstimation();
-        }
-      });
+  function renderSummary(story) {
+    summaryArea.innerHTML = "";
+    const values = Object.values(currentVotes);
+    if (!values.length) {
+      summaryArea.textContent = "No votes yet.";
+      return;
+    }
 
-      // Init
-      loadState();
-      renderStories();
-      renderSessionParticipants();
+    if (story.revealed) {
+      const nums = values.filter((v) => typeof v === "number");
+      const qs = values.filter((v) => v === "?");
 
-      // Auto-prompt for name when the site opens (per browser)
-      if (!sessionParticipants.length) {
-        setTimeout(() => {
-          const suggested =
-            localStorage.getItem("scrumEstimatorLastName") || "";
-          const name = window.prompt(
-            "Enter your name to join this pointing session:",
-            suggested
-          );
-          if (name && name.trim()) {
-            const clean = name.trim();
-            if (!sessionParticipants.includes(clean)) {
-              sessionParticipants.push(clean);
-              localStorage.setItem("scrumEstimatorLastName", clean);
-              saveState();
-              renderSessionParticipants();
-            }
-          }
-        }, 150);
+      if (nums.length) {
+        const min = Math.min(...nums);
+        const max = Math.max(...nums);
+        const avg = (nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(2);
+        summaryArea.innerHTML += `<p>min ${min}, max ${max}, avg ${avg}</p>`;
       }
-    })();
-  </script>
+      if (qs.length) {
+        summaryArea.innerHTML += `<p>${qs.length} × “?” votes</p>`;
+      }
+    } else {
+      summaryArea.innerHTML = `<p>${values.length} / ${participants.length} votes in</p>`;
+    }
+  }
+
+  function renderFinalEstimateOptions(story) {
+    finalEstimateSelect.innerHTML = `<option value="">—</option>`;
+    allowedPoints.forEach((p) => {
+      if (p === "?") return;
+      const opt = document.createElement("option");
+      opt.value = p;
+      opt.textContent = p;
+      finalEstimateSelect.appendChild(opt);
+    });
+    if (story.finalEstimate) finalEstimateSelect.value = story.finalEstimate;
+  }
+
+  function openEstimation(storyId) {
+    currentStoryId = storyId;
+    const story = stories.find((s) => s.id === storyId);
+    if (!story) return;
+
+    estStoryTitle.textContent = story.title;
+    estStoryDesc.textContent = story.description || "";
+
+    if (unsubscribeVotes) unsubscribeVotes();
+
+    unsubscribeVotes = onSnapshot(
+      collection(db, "sessions", sessionId, "stories", storyId, "votes"),
+      (snap) => {
+        currentVotes = {};
+        snap.forEach((d) => (currentVotes[d.id] = d.data().value));
+        renderVotes(story);
+        renderSummary(story);
+      }
+    );
+
+    renderFinalEstimateOptions(story);
+    estimationPanel.style.display = "flex";
+  }
+
+  function closeEstimation() {
+    estimationPanel.style.display = "none";
+    currentStoryId = null;
+    if (unsubscribeVotes) unsubscribeVotes();
+  }
+
+  // Live Firestore subscriptions
+  onSnapshot(collection(db, "sessions", sessionId, "participants"), (snap) => {
+    participants = snap.docs.map((d) => d.id);
+    renderParticipants();
+  });
+
+  onSnapshot(collection(db, "sessions", sessionId, "stories"), (snap) => {
+    stories = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    stories.sort((a, b) => (a.createdAt?.seconds ?? 0) - (b.createdAt?.seconds ?? 0));
+    renderStories();
+  });
+
+  // Event handlers
+  joinSessionBtn.onclick = joinSession;
+  addStoryBtn.onclick = addStory;
+  closeEstimationBtn.onclick = closeEstimation;
+  revealVotesBtn.onclick = revealVotes;
+  hideVotesBtn.onclick = hideVotes;
+  saveFinalEstimateBtn.onclick = saveFinalEstimate;
+  estimationPanel.onclick = (e) => { if (e.target === estimationPanel) closeEstimation(); };
+</script>
 </body>
 </html>
